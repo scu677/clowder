@@ -1,0 +1,140 @@
+/***********************************************************************
+*
+* 
+***********************************************************************/
+
+
+
+package main
+
+import (
+    "database/sql"
+    "fmt"
+    "log"
+    "strings"
+    _ "github.com/go-sql-driver/mysql"
+    _"github.com/mattn/go-sqlite3"
+)
+
+func main() {
+
+
+	db, err := makeConnection("/usr/home/jdawson/goWorkspace/src/github.com/musec/clowder/design/Database-mock/TestDBext.db")
+
+	defer db.Close()
+	err = db.Ping()
+	if err != nil {
+        fmt.Println(err)
+        fmt.Println("error Two tripped")
+        ///ToDo Add reconnect code
+        db.Close()
+        return 
+    }  
+        
+	servername:= "Test"
+	isAvailable := GetAvailblity(servername, db)
+	fmt.Println(isAvailable) 
+	return
+
+}
+/***********************************************************************
+* this makes the Database connection
+* Returns: reference to the Database, any errors Recived
+* 
+***********************************************************************/
+func makeConnection(dbDirectory string) (*sql.DB, error) {
+	 db, err := sql.Open("sqlite3", dbDirectory)
+      
+    if err != nil {
+        fmt.Println(err)
+        fmt.Println("error one tripped")
+        return db, err
+    }
+    //defer db.Close()
+    err = db.Ping()
+    if err != nil {
+        fmt.Println(err)
+        fmt.Println("error Two tripped")
+        return db, err
+    }
+    fmt.Println("connection established")
+	
+	
+	return db, err
+   
+  }
+  
+/***********************************************************************
+* this makes the Database connection
+* Returns: reference to the Database, any errors Recived
+* 
+***********************************************************************/
+func GetAvailblity(serverHostName string, Database *sql.DB) bool {   
+	
+    rows, err := Database.Query("SELECT Availability FROM serverInformation WHERE Hostname=?", serverHostName)
+    if err != nil {
+            log.Fatal(err)
+    }
+    var available bool
+    defer rows.Close()
+    for rows.Next() {
+            if err := rows.Scan(&available); err != nil {
+                    log.Fatal(err)
+            }
+            fmt.Printf("Availblity is %t for %s\n", available, serverHostName)
+    }
+    if err := rows.Err(); err != nil {
+            log.Fatal(err)
+    }  
+    return available
+}
+
+func GetUser(serverHostName string, Database *sql.DB) string {   
+	
+    rows, err := Database.Query("SELECT User FROM serverInformation WHERE Hostname=?", serverHostName)
+    if err != nil {
+            log.Fatal(err)
+    }
+    var user string
+    defer rows.Close()
+    for rows.Next() {
+            if err := rows.Scan(&user); err != nil {
+                    log.Fatal(err)
+            }
+            fmt.Printf("curent User is %s for %s\n", user, serverHostName)
+    }
+    if err := rows.Err(); err != nil {
+            log.Fatal(err)
+    }  
+    return user
+}
+
+func GetUser(serverHostName string, Database *sql.DB) string {   
+	
+	return GetAttribute(serverHostName, Database, "User")
+}
+
+/***********************************************************************
+* this quearies the databace based on what attrbuite it was passed in
+* Returns: reference to the Database, any errors Recived
+* 
+***********************************************************************/
+func GetAttribute(serverHostName string, Database *sql.DB, attribute string) string {   
+	
+    rows, err := Database.Query(strings.Replace("SELECT ? FROM serverInformation WHERE Hostname=?", "?", attribute, 1), serverHostName)
+    if err != nil {
+            log.Fatal(err)
+    }
+    var user string
+    defer rows.Close()
+    for rows.Next() {
+            if err := rows.Scan(&user); err != nil {
+                    log.Fatal(err)
+            }
+            fmt.Printf("curent User is %s for %s\n", user, serverHostName)
+    }
+    if err := rows.Err(); err != nil {
+            log.Fatal(err)
+    }  
+    return user
+}
