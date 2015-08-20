@@ -1,0 +1,28 @@
+<h1>Editing {{.Title}}</h1>
+
+<form action="/save/{{.Title}}" method="POST">
+<div><textarea name="body" rows="3" cols="10">{{printf "%s" .Body}}</textarea></div>
+<div><input type="submit" value="Save"></div>
+
+
+<table style="width:100%">
+  <tr>
+    <td>{{printf "%s" .Body}}</td>
+    <td>Smith</td>		
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>		
+    <td>94</td>
+  </tr>
+  <tr>
+    <td>John</td>
+    <td>Doe</td>		
+    <td>80</td>
+  </tr>
+</table>
+
+</form>
+
+

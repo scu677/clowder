@@ -1,0 +1,31 @@
+<head>
+	<link rel="stylesheet" type="text/css" href="webInterface.css">
+</head>
+
+<h1>{{.Title}}</h1>
+
+<p>[<a href="/edit/{{.Title}}">edit</a>]</p>
+
+
+<form action="/save/{{.Title}}" method="POST">
+<table style="width:100%">
+  <tr>
+    <td>{{printf "%s" .Body}}</td>
+    <td>empty</td>		
+    <td>empty</td>
+  </tr>
+  <tr>
+    <td>empty</td>
+    <td>empty</td>		
+    <td>empty</td>
+  </tr>
+  <tr>
+    <td>empty</td>
+    <td>empty</td>		
+    <td>empty</td>
+  </tr>
+</table>
+
+</form>
+
+
