@@ -118,11 +118,10 @@ func TestGetRow(t *testing.T){
 	for _, servers := range tests{
 		//fmt.Println("TestGetRow for ran")
 		got := GetRow(servers.servername, db)
-		gots := RowToTests(got)
-		//fmt.Println(gots)
-		if servers != gots{
-			fmt.Println(gots)
-			t.Errorf("GetAvailblity() == %s  should have been  %t\n" , gots, servers.availability)
+		fmt.Println(got)
+		if servers != got{
+			fmt.Println(got)
+			t.Errorf("GetAvailblity() == %s  should have been  %t\n" , got, servers.availability)
 		}
 	}   	
 }

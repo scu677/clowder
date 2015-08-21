@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Testing"
+	"testing"
 	"fmt"
 )
 

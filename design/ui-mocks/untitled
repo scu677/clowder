@@ -1,0 +1,5 @@
+type webCounter struct{
+
+
+	count chan int
+}

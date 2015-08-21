@@ -29,7 +29,7 @@ func main() {
 	isAvailable := DBGet.GetAvailblity(servername, db)
 	fmt.Println(isAvailable) 
 	
-	DBInsert.UpdateProcessor(servername, db, "i27")
+	DBInsert.UpdateProcessor(servername, db, "i29")
 	DBInsert.UpdateIP(servername, db, "123.123.123.123")
 	
 	
