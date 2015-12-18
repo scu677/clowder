@@ -200,13 +200,17 @@ func (s *Server) StartDHCPServer() {
 			return
 
 		}
+		fmt.Printf("GET:[%x]\n",buffer[:n])
+
 		if n < 240 {
 			continue
 		}
 		ipStr, portStr, err := net.SplitHostPort(addr.String())
+		fmt.Println(ipStr,portStr)
+
 		if err != nil {
 			s.WriteLog("ERROR\t"+err.Error())
-			return
+			continue
 		}
 
 		requestPacket := pxedhcp.Packet(buffer[:n])
@@ -214,14 +218,15 @@ func (s *Server) StartDHCPServer() {
 		if responsePacket == nil {
 			continue
 		}
-
+		fmt.Printf("REPLY:[%x]\n",responsePacket)
 		if net.ParseIP(ipStr).Equal(net.IPv4zero) || responsePacket.IsBroadcast() {
 			port, _ := strconv.Atoi(portStr)
 			addr = &net.UDPAddr{IP: net.IPv4bcast, Port: port}
 		}
+		fmt.Println("Write to:",addr)
 		if _, err := conn.WriteTo(responsePacket, addr); err != nil {
 			s.WriteLog("ERROR\t"+err.Error())
-			return
+			continue
 		}
 		//if _, err := conn.WriteTo(responsePacket, &net.UDPAddr{IP: net.IPv4bcast, Port: 68}); err != nil {
 		//	s.WriteLog("ERROR\t"+err.Error())
