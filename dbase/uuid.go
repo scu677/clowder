@@ -17,18 +17,24 @@ func (uuid UUID) String() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x",time_low, time_mid, time_high_and_version, clock_seq, node)
 }
 
-func ParseUUID(str string) UUID {
+func ParseUUID(str string) (UUID, error) {
 	s:=strings.Split(str,"-")
-	time_low,_:=hex.DecodeString(s[0])
-	time_mid,_ :=hex.DecodeString(s[1])
-	time_high_and_version,_ := hex.DecodeString(s[2])
-	clock_seq,_:=hex.DecodeString(s[3])
-	node,_:=hex.DecodeString(s[4])
+	if len(s)!=5 || len(s[0])!=4 || len(s[1])!=2 || len(s[2])!=2 || len(s[3])!=2 || len(s[4])!=6 {
+		return nil,fmt.Errorf("Invalid UUID string.")
+	}
+	time_low,err0:=hex.DecodeString(s[0])
+	time_mid,err1 :=hex.DecodeString(s[1])
+	time_high_and_version,err2 := hex.DecodeString(s[2])
+	clock_seq,err3:=hex.DecodeString(s[3])
+	node,err4:=hex.DecodeString(s[4])
+	if err0||err1||err2||err3||err4 { return nil,fmt.Errorf("Invalid UUID string.") }
+
 	uuid:=[]byte{time_low[3],time_low[2],time_low[1],time_low[0],time_mid[1],time_mid[0],time_high_and_version[1],time_high_and_version[0]}
 	uuid=append(uuid,clock_seq...)
 	uuid=append(uuid,node...)
-	return UUID(uuid)
+	return UUID(uuid),nil
 }
+
 
 type Hardwares map[string]UUID
 

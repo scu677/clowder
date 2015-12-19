@@ -113,43 +113,56 @@ func (s *Server) StartTCPServer() error {
 					return
 				}
 				if n<=2 { continue }
-				cmd:=string(buf[:n])
-				if cmd[n-2:]==string([]byte{13,10}){ cmd=cmd[:n-2] }
-				s.WriteLog("INFO\tGet command "+string(cmd)+" from "+addr )
-				switch cmd {
-					case "DHCPON":
+				msg:=string(buf[:n])
+				if msg[n-2:]==string([]byte{13,10}){ msg=msg[:n-2] }
+				s.WriteLog("INFO\tGet message "+msg+" from "+addr )
+				cmd:=strings.Split(msg," ")
+				switch cmd[0] {
+					case "DHCP_ON":
 						go s.StartDHCPServer()
 						conn.Write([]byte("DONE"))
 						time.Sleep(time.Second*5)
-
-					case "DHCPOFF":
+					case "DHCP_OFF":
 						s.StopDHCPServer()
 						conn.Write([]byte("DONE"))
-
 					case "LEASES":
-						msg:=s.ExportLeaseTable()
-						fmt.Println(msg)
-						conn.Write([]byte(msg))
-					case "STOPCLOWDER":
+						rep:=s.ExportLeaseTable()
+						fmt.Println(rep)
+						conn.Write([]byte(rep))
+					case "STOP_CLOWDER":
 						conn.Write([]byte("CLOWDER closing..."))
 						on:=<-s.DHCPOn
 						s.DHCPOn<-on
 						if on { s.StopDHCPServer() }
 						close(s.TcpQuit)
 						listener.Close()
-					case "NEWHARDWARE":
-						msg:=s.NewHardware.String()
-						fmt.Println(msg)
-						conn.Write([]byte(msg))
+					case "NEW_HARDWARE":
+						rep:=s.NewHardware.String()
+						fmt.Println(rep)
+						conn.Write([]byte(rep))
 					case "STATUS":
-						msg:=s.GetStatus()
-						fmt.Println(msg)
-						conn.Write([]byte(msg))
-					case "CLOSECONN":
+						rep:=s.GetStatus()
+						fmt.Println(rep)
+						conn.Write([]byte(rep))
+					case "CLOSE_CONN":
 						conn.Write([]byte("DONE"))
 						return
+					case "ADD_DEVICE", "ADD_MACHINE":
+						rep:="DONE"
+						if err:=s.AddMac(cmd);err!=nil {
+							rep="ERROR\t"+err.Error()
+						}
+						conn.Write([]byte(rep))
+					case "ADD_PXE":
+						rep:="DONE"
+						if err:=s.AddPxe(cmd);err!=nil {
+							rep="ERROR\t"+err.Error()
+						}
+						conn.Write([]byte(rep))
+
+
 					default:
-						conn.Write([]byte("INVALID COMMAND.\nUSE: DHCPON, DHCPOFF, LEASES, NEWHARDWARE, STATUS, CLOSECONN, STOPCLOWDER"))
+						conn.Write([]byte("INVALID COMMAND.\nUSE: DHCP_ON, DHCP_OFF, LEASES, NEW_HARDWARE, STATUS, CLOSE_CONN, STOP_CLOWDER"))
 						continue
 				}
 			}
@@ -200,13 +213,11 @@ func (s *Server) StartDHCPServer() {
 			return
 
 		}
-		fmt.Printf("GET:[%x]\n",buffer[:n])
 
 		if n < 240 {
 			continue
 		}
 		ipStr, portStr, err := net.SplitHostPort(addr.String())
-		fmt.Println(ipStr,portStr)
 
 		if err != nil {
 			s.WriteLog("ERROR\t"+err.Error())
@@ -218,20 +229,14 @@ func (s *Server) StartDHCPServer() {
 		if responsePacket == nil {
 			continue
 		}
-		fmt.Printf("REPLY:[%x]\n",responsePacket)
 		if net.ParseIP(ipStr).Equal(net.IPv4zero) || responsePacket.IsBroadcast() {
 			port, _ := strconv.Atoi(portStr)
 			addr = &net.UDPAddr{IP: net.IPv4bcast, Port: port}
 		}
-		fmt.Println("Write to:",addr)
 		if _, err := conn.WriteTo(responsePacket, addr); err != nil {
 			s.WriteLog("ERROR\t"+err.Error())
 			continue
 		}
-		//if _, err := conn.WriteTo(responsePacket, &net.UDPAddr{IP: net.IPv4bcast, Port: 68}); err != nil {
-		//	s.WriteLog("ERROR\t"+err.Error())
-		//	return
-		//}
 	}
 }
 
@@ -278,6 +283,37 @@ func (s *Server) GetStatus() string {
 	return msg
 }
 
+func (s *Server) AddMac(cmd []string) error {
+	if len(cmd)<2 {
+		return fmt.Errorf("No MAC address specified. Usage: ADD_MAC <MAC address>")
+	}
+	mac,err:=net.ParseMAC(cmd[1])
+	if err!=nil { return err }
+	mLease=s.MachineLeases.GetLeaseFromMAC(mac)
+	dLease=s.DeviceLeases.GetLeaseFromMAC(mac)
+	if mLease!=nil || dLease!=nil { return fmt.Errorf("MAC address "+mac.String()" is already exist.") }
+	if cmd[0]=="ADD_MACHINE" {
+		lease=s.MachineLeases.GetAvailLease()
+	} else {
+		lease=s.DeviceLeases.GetAvailLease()
+	}
+	if lease==nil { return fmt.Errorf("Out of available IP address.") }
+	if err:=s.DB.InsertBinding(mac.String(),lease.Ip.String());err!=nil { return err }
+	lease.Stat=dbase.RESERVED
+	lease.Mac=mac
+	return nil
+}
+
+func (s *Server) AddPxe(cmd []string) error {
+	if len(cmd)!=4 { return fmt.Errorf("Invalid parameters") }
+	uuid,err:=dbase.ParseUUID(cmd[1])
+	if err!=nil { return err }
+	record:=s.Pxe.GetPxeRecord(uuid)
+	if record!=nil { return fmt.Errorf("UUID "+uuid.String()" is already exist.") }
+	if err:=s.DB.InsertPxe(cmd[1],cmd[2],cmd[3]);err!=nil { return err }
+	s.Pxe.AddRecord(uuid,cmd[2],cmd[3])
+	return nil
+}
 
 func SendCommand(addr,cmd string) (string, error) {
 	var (

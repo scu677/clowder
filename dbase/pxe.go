@@ -16,11 +16,11 @@ func  NewPxeTable() PxeTable{
 	return make(PxeTable,0,10)
 }
 
-func (t PxeTable) AddRecord(uuid []byte) {
-	t=append(t,PxeRecord{uuid,"",""})
+func (t *PxeTable) AddRecord(uuid UUID, path, file string) {
+	*t=append((*t),PxeRecord{uuid,path,file})
 }
 
-func (t PxeTable) GetRecord(uuid []byte) *PxeRecord {
+func (t PxeTable) GetRecord(uuid UUID) *PxeRecord {
 	for i:= range t {
 		if bytes.Equal(t[i].Uuid,uuid) {
 			return &t[i]
@@ -28,7 +28,6 @@ func (t PxeTable) GetRecord(uuid []byte) *PxeRecord {
 	}
 	return nil
 }
-
 
 func (r *PxeRecord) SetRootPath(path string) {
 	r.RootPath=path

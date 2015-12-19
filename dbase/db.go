@@ -25,7 +25,7 @@ func (l Leases) ReadBindingFromDB(db *sql.DB) error {
 }
 
 //InsertBindingToDB writes a record (MAC, IP) into Binding table
-func InsertBindingToDB(db *sql.DB, mac,ip string) error {
+func (db *.sql.DB) InsertBinding(mac,ip string) error {
 	stmt,err := db.Prepare("INSERT INTO Binding(mac, ip) values(?,?)")
 	if err!=nil {return err}
 	_, err = stmt.Exec(mac,ip)
@@ -34,7 +34,7 @@ func InsertBindingToDB(db *sql.DB, mac,ip string) error {
 }
 
 //UpdateBindingToDB updates an exist record of Binding table
-func UpdateBindingToDB(db *sql.DB, mac,ip string) error {
+func (db *sql.DB) UpdateBinding(mac,ip string) error {
 	stmt,err := db.Prepare("UPDATE Binding SET ip=? WHERE mac=?")
 	if err!=nil {return err}
 	_, err = stmt.Exec(ip,mac)
@@ -43,7 +43,7 @@ func UpdateBindingToDB(db *sql.DB, mac,ip string) error {
 }
 
 //DeleteMacBinding deletes an exist record of Binding table
-func DeleteMacBinding(db *sql.DB, mac string) error{
+func (db *sql.DB) DeleteMacBinding(mac string) error{
 	stmt, err := db.Prepare("DELETE FROM Binding WHERE mac=?")
 	if err!=nil { return err }
 	_, err = stmt.Exec(mac)
@@ -71,7 +71,7 @@ func (p *PxeTable) ReadPxeFromDB(db *sql.DB) error {
 }
 
 //InsertPxeToDB writes PXE information into Pxe table
-func InsertPxeToDB(db *sql.DB, uuid, path, file string) error {
+func (db *sql.DB) InsertPxe(uuid, path, file string) error {
 	stmt,err := db.Prepare("INSERT INTO Pxe(uuid, rootpath, bootfile) values(?,?,?)")
 	if err!=nil {return err}
 	_, err = stmt.Exec(uuid,path,file)
@@ -80,7 +80,7 @@ func InsertPxeToDB(db *sql.DB, uuid, path, file string) error {
 }
 
 //UpdatePxeToDB updates an exist record of Pxe table
-func UpdatePxeToDB(db *sql.DB, uuid,path,file string) error {
+func (db *sql.DB) UpdatePxe(db *sql.DB, uuid,path,file string) error {
 	stmt,err := db.Prepare("UPDATE Pxe SET rootpath=?, bootfile=? WHERE uuid=?")
 	if err!=nil {return err}
 	_, err = stmt.Exec(path, file, uuid)
@@ -89,7 +89,7 @@ func UpdatePxeToDB(db *sql.DB, uuid,path,file string) error {
 }
 
 //DeletePxeRecord deletes an exist record of Pxe table
-func DeletePxeRecord(db *sql.DB, uuid string) error{
+func (db *sql.DB) DeletePxe(uuid string) error{
 	stmt, err := db.Prepare("DELETE FROM Pxe WHERE uuid=?")
 	if err!=nil { return err }
 	_, err = stmt.Exec(uuid)
