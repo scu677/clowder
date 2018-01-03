@@ -20,8 +20,11 @@ package db
 
 import (
 	"database/sql"
+	
 	"fmt"
 	"time"
+//	"upper.io/db"
+	 _"github.com/mattn/go-sqlite3"
 )
 
 type Reservation struct {
@@ -58,9 +61,10 @@ func initReservations(tx *sql.Tx) error {
 
 func (d DB) CreateReservation(machine string, user string,
 	start time.Time, end time.Time, pxepath string, nfsroot string) error {
-
-	_, err := d.sql.Exec(`
-			INSERT INTO Reservations(machine,user,start,end,pxepath,nfsroot)
+	       _, err := d.sql.Exec (`BEGIN;
+	   SELECT CASE (id,user,machine,start,end,ended,pxepath,nfsroot) WHEN ((? BETWEEN r.start AND r.end) OR (? BETWEEN r.start AND r.end))THEN ROLLBACK; 
+		ELSE
+		INSERT INTO Reservations(machine,user,start,end,pxepath,nfsroot)
 			VALUES (
 				(SELECT id from Machines where name=?),
 				(SELECT id from Users where username=?),
@@ -68,10 +72,9 @@ func (d DB) CreateReservation(machine string, user string,
 				?,
 				?,
 				?
-			)`,
-		machine, user, start, end,pxepath, nfsroot)
+			)END FROM Reservations r COMMIT;`,start,end,machine,user,start,end,pxepath,nfsroot)
 
-	return err
+	return err 
 }
 
 func (d DB) GetReservations() ([]Reservation, error) {
@@ -79,7 +82,7 @@ func (d DB) GetReservations() ([]Reservation, error) {
 		SELECT id,user, machine, start, end, ended, pxepath, nfsroot
 		FROM Reservations
 		ORDER BY end DESC
-
+	
 			`)
 	if err != nil {
 		return nil, err
