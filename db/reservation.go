@@ -61,19 +61,10 @@ func initReservations(tx *sql.Tx) error {
 
 func (d DB) CreateReservation(machine string, user string,
 	start time.Time, end time.Time, pxepath string, nfsroot string) error {
-	       _, err := d.sql.Exec (`BEGIN;
-	   SELECT CASE (id,user,machine,start,end,ended,pxepath,nfsroot) WHEN ((? BETWEEN r.start AND r.end) OR (? BETWEEN r.start AND r.end))THEN ROLLBACK; 
-		ELSE
-		INSERT INTO Reservations(machine,user,start,end,pxepath,nfsroot)
-			VALUES (
-				(SELECT id from Machines where name=?),
-				(SELECT id from Users where username=?),
-				?,
-				?,
-				?,
-				?
-			)END FROM Reservations r COMMIT;`,start,end,machine,user,start,end,pxepath,nfsroot)
-
+	       _, err := d.sql.Exec (`
+	      		INSERT INTO Reservations(machine,user,start,end,pxepath,nfsroot)
+			SELECT (SELECT id from Machines where name=?),(SELECT id from Users where username=?),?,?,?,?
+			where not exists(select * from reservations where (? BETWEEN start AND end) OR (? BETWEEN start AND end))`,machine,user,start,end,pxepath,nfsroot,start,end)
 	return err 
 }
 

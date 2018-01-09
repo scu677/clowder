@@ -548,6 +548,7 @@ func (s Server) createReservation(w http.ResponseWriter, r *http.Request) {
 			renderError(w, "Incorrect date/time format",
 				fmt.Sprint("Expected hh:mm dd-mm-yyyy, got:",
 					err))
+			return
 		}
 
 		end, err := time.Parse("15:04 02-01-2006", form["end"][0])
@@ -555,6 +556,7 @@ func (s Server) createReservation(w http.ResponseWriter, r *http.Request) {
 			renderError(w, "Incorrect date/time format",
 				fmt.Sprint("Expected hh:mm dd-mm-yyyy, got:",
 					err))
+			return
 		}
 		pxepath := form["pxe"][0]
 		nfsroot := form["nfs"][0]
@@ -563,11 +565,14 @@ func (s Server) createReservation(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			renderError(w, "Error creating reservation",
 				fmt.Sprint("Unable to make reservation:", err))
+			return
 		}
 
+		/*
 		fmt.Fprint(w, `<html><head>
 		<meta http-equiv="refresh" content="0; url=/reservations/" />
 		</head></html>`)
+		*/
 
 	} else {
 		tname := "reservation-new.html"
