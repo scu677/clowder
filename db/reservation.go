@@ -64,7 +64,7 @@ func (d DB) CreateReservation(machine string, user string,
 	       _, err := d.sql.Exec (`
 	      		INSERT INTO Reservations(machine,user,start,end,pxepath,nfsroot)
 			SELECT (SELECT id from Machines where name=?),(SELECT id from Users where username=?),?,?,?,?
-			where not exists(select * from reservations where (? BETWEEN start AND end) OR (? BETWEEN start AND end))`,machine,user,start,end,pxepath,nfsroot,start,end)
+			where not exists(select * from reservations where (? >= start AND ? <= end) OR (? <= start AND ? >= end))`,machine,user,start,end,pxepath,nfsroot,start,start,end,end)
 	return err 
 }
 

@@ -4,11 +4,18 @@
 	<meta charset="utf-8">
 	<title>Clowder</title>
 	<link type="text/css" rel="stylesheet" href="/static/musec.css"/>
+	<script>
+	function myFunc(){
+	document.getElementById("demo").innerHTML = "welcome to clowder";
+	}
+	</script>
 </head>
 
 <body>
 
-<h1>Clowder</h1>
+	<h1 id= "demo">Clowder</h1>
+	<button type="button" onclick="myFunc()">click me</button>
+
 
 <h2><a href="machines">Machine inventory</a></h2>
 <table>
