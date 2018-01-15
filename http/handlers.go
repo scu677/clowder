@@ -568,11 +568,11 @@ func (s Server) createReservation(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		/*
+		
 		fmt.Fprint(w, `<html><head>
 		<meta http-equiv="refresh" content="0; url=/reservations/" />
 		</head></html>`)
-		*/
+		
 
 	} else {
 		tname := "reservation-new.html"
