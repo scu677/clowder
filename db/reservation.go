@@ -60,12 +60,12 @@ func initReservations(tx *sql.Tx) error {
 
 func (d DB) CreateReservation(machine string, user string,
 	start time.Time, end time.Time, pxepath string, nfsroot string) error {
-	       _, err := d.sql.Exec (`
+	       _, err := d.sql.Exec (`BEGIN;
 	      		INSERT INTO Reservations (machine,user,start,end,pxepath,nfsroot)
 			SELECT (SELECT id from Machines where name=?),(SELECT id from Users where username=?),?,?,?,?
-			where not exists (select r.id from Reservations r
-		INNER JOIN Machines m
-	ON m.id = r.machine where m.name = ? AND (? >= start AND ? <= end) OR (? <= start AND ? >= end))`,machine,user,start,end,pxepath,nfsroot,machine,start,start,end,end)
+			where not exists (select r.id from Reservations r 
+			INNER JOIN Machines m 
+			ON m.id = r.machine where m.name = ? AND (? >= start AND ? <= end) OR (? <= start AND ? >= end));COMMIT;`,machine,user,start,end,pxepath,nfsroot,machine,start,start,end,end)
 	return err
 }
 
